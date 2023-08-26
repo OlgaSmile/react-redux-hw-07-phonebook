@@ -1,31 +1,51 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { nanoid } from 'nanoid';
+import { createSlice, isAnyOf } from '@reduxjs/toolkit';
+import { fetchAllContacts, addContacts, deleteContacts } from './Operations';
 
-const initialState = [
-  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-];
-export const contactsSlice = createSlice({
+const initialState = {
+  items: [],
+  isLoading: false,
+  error: null,
+};
+
+const STATUS = {
+  PENDING: 'pending',
+  FULFILLED: 'fulfilled',
+  REJECTED: 'rejected',
+};
+const thunkArr = [fetchAllContacts, addContacts, deleteContacts];
+function thunkMapping(status) {
+  return thunkArr.map(el => el[status]);
+}
+
+const handlePending = state => {
+  state.isLoading = true;
+};
+const handleRejected = (state, action) => {
+  state.error = action.payload;
+};
+const handleFulfilled = state => {
+  state.isLoading = false;
+  state.error = null;
+};
+
+const contactsSlice = createSlice({
   name: 'contacts',
   initialState,
-  reducers: {
-    addContact: (state, action) => {
-      if (state.find(({ name }) => name === action.payload.name)) {
-        return alert(`${action.payload} is already in contacts`);
-      }
-
-      action.payload.id = nanoid(5);
-
-      state.push(action.payload);
-    },
-    deleteContact: (state, action) => {
-      return state.filter(el => el.id !== action.payload);
-    },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchAllContacts.fulfilled, (state, action) => {
+        state.items = action.payload;
+      })
+      .addCase(addContacts.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(deleteContacts.fulfilled, (state, action) => {
+        state.items = state.items.filter(item => item.id !== action.payload.id);
+      })
+      .addMatcher(isAnyOf(...thunkMapping(STATUS.FULFILLED)), handleFulfilled)
+      .addMatcher(isAnyOf(...thunkMapping(STATUS.REJECTED)), handleRejected)
+      .addMatcher(isAnyOf(...thunkMapping(STATUS.PENDING)), handlePending);
   },
 });
-
-export const { addContact, deleteContact } = contactsSlice.actions;
 
 export default contactsSlice.reducer;

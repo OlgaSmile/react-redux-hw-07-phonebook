@@ -1,10 +1,12 @@
 import { Formik, Field, Form } from 'formik';
 import * as yup from 'yup';
-import { useDispatch } from 'react-redux';
-import { addContact } from 'redux/contactsSlice';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { addContacts } from '../../Redux/Operations';
 
 export default function Input() {
   const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contacts.items);
 
   const initialValues = {
     name: '',
@@ -15,9 +17,15 @@ export default function Input() {
     name: yup.string().required(),
     number: yup.number().min(8).required(),
   });
+  function checkName(name) {
+    return contacts.find(ob => name === ob.name);
+  }
 
   function onHandleSubmit(values, { resetForm }) {
-    dispatch(addContact(values));
+    if (checkName(values.name)) {
+      return alert(`${values.name} is already in contacts`);
+    }
+    dispatch(addContacts(values));
     resetForm();
   }
 

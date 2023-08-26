@@ -1,8 +1,9 @@
-import { useDispatch } from 'react-redux';
-import { filterChange } from 'redux/filtersSlice';
+import { changeFilter } from '../../Redux/FilterSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function Filter() {
   const dispatch = useDispatch();
+  const filterValue = useSelector(state => state.filter);
 
   return (
     <>
@@ -11,13 +12,8 @@ export default function Filter() {
         <input
           type="text"
           name="filter"
-          onChange={e =>
-            dispatch(
-              filterChange(
-                e.target.attributes.name.ownerElement.value.toLowerCase()
-              )
-            )
-          }
+          value={filterValue}
+          onChange={e => dispatch(changeFilter(e.target.value))}
         />
       </label>
     </>
